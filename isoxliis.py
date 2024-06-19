@@ -21,20 +21,20 @@ At startup hold:
 keymap = [[
     KC.ESCAPE,    KC.Q, KC.W, KC.E, KC.R, KC.T, KC.Y, KC.U, KC.I, KC.O, KC.P,           KC.ENTER,
     KC.LEFT_SHIFT, KC.A, KC.S, KC.D, KC.F, KC.G, KC.H, KC.J, KC.K, KC.L,   KC.BACKSLASH, 0,
-    0,         KC.Z, KC.X, KC.C, KC.V, KC.B, KC.N, KC.M, KC.COMMA, KC.DOT,   KC.UP, KC.HASH,
+    0,              KC.Z, KC.X, KC.C, KC.V, KC.B, KC.N, KC.M, KC.COMMA, KC.DOT,   KC.UP, KC.HASH,
     KC.LEFT_UI, KC.LEFT_CTRL, KC.LEFT_ALT, 0, 0, KC.SPACE, 0, 0, 0,    KC.LEFT, KC.DOWN, KC.RIGHT
     ], [
-    KC.ESCAPE,    KC.N1, KC.N2, KC.N3, KC.N4, KC.N5, KC.N6, KC.N7, KC.N8, KC.N9, KC.N0, KC.BACKSPACE,
-    KC.LEFT_SHIFT, KC.A, KC.S, KC.D, KC.F, KC.G, KC.H, KC.J, KC.K, KC.L,   KC.SLASH, 0,
-    0,         KC.Z, KC.X, KC.C, KC.V, KC.B, KC.N, KC.M, KC.COMMA, KC.DOT,   KC.UP, KC.HASH,
-    KC.LEFT_UI, KC.LEFT_CTRL, KC.LEFT_ALT, 0, 0, KC.SPACE, 0, 0, 0,    KC.LEFT, KC.DOWN, KC.RIGHT
+    KC.TILDE,     KC.N1, KC.N2, KC.N3, KC.N4, KC.N5, KC.N6, KC.N7, KC.N8, KC.N9, KC.N0, KC.BACKSPACE,
+    KC.LEFT_SHIFT, KC.OPEN_BRACKET, KC.CLOSE_BRACKET, KC.D, KC.F, KC.G, KC.H, KC.J, KC.MINUS, KC.EQUAL,   KC.SLASH, 0,
+    0,              KC.Z, KC.X, KC.C, KC.V, KC.B, KC.N, KC.M, KC.COMMA, KC.INSERT,   KC.PAGEUP, KC.DELETE,
+    KC.LEFT_UI, KC.LEFT_CTRL, KC.LEFT_ALT, 0, 0, KC.PRINTSCREEN, 0, 0, 0,    KC.HOME, KC.PAGEDOWN, KC.END
 ]]
 
 ROWS = [18, 19, 20, 21]
 COLS = [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
 
 # Build ourselves a lookup table of keycode labels
-CODE_TO_KEY = {v:k for k, v in KC.__dict__.items()}
+CODE_TO_KEY = {v: k for k, v in KC.__dict__.items()}
 
 # Set up our columns, must be input/PULL_UP
 COL_PINS = [Pin(col, Pin.IN, Pin.PULL_UP) for col in COLS]
