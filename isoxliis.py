@@ -7,7 +7,7 @@ from usb.device.keyboard import KeyboardInterface, KeyCode as KC
 
 
 """
-ISOXLIIS Keyboard Firmware v0.0.1
+ISOXLIIS Keyboard Firmware v0.0.2
 
 Requires pico_usb-v1.23.0-1-pimoroni-micropython.uf2
 From: https://github.com/pimoroni/pimoroni-pico/releases/tag/v1.23.0-1
@@ -17,18 +17,25 @@ At startup hold:
     - Q to disable USB output (for debugging)
 """
 
-
+# Unpopulated keys and LAYER_SELECT should be set to 0
+# Default layer is always layer 0
+# Holding down the LAYER_SELECT key will access layer 1
 keymap = [[
     KC.ESCAPE,    KC.Q, KC.W, KC.E, KC.R, KC.T, KC.Y, KC.U, KC.I, KC.O, KC.P,           KC.ENTER,
-    KC.LEFT_SHIFT, KC.A, KC.S, KC.D, KC.F, KC.G, KC.H, KC.J, KC.K, KC.L,   KC.BACKSLASH, 0,
-    0,              KC.Z, KC.X, KC.C, KC.V, KC.B, KC.N, KC.M, KC.COMMA, KC.DOT,   KC.UP, KC.HASH,
+    0,             KC.A, KC.S, KC.D, KC.F, KC.G, KC.H, KC.J, KC.K, KC.L,   KC.QUOTE, 0,
+    KC.LEFT_SHIFT,  KC.Z, KC.X, KC.C, KC.V, KC.B, KC.N, KC.M, KC.COMMA, KC.DOT,   KC.UP, KC.HASH,
     KC.LEFT_UI, KC.LEFT_CTRL, KC.LEFT_ALT, 0, 0, KC.SPACE, 0, 0, 0,    KC.LEFT, KC.DOWN, KC.RIGHT
     ], [
     KC.TILDE,     KC.N1, KC.N2, KC.N3, KC.N4, KC.N5, KC.N6, KC.N7, KC.N8, KC.N9, KC.N0, KC.BACKSPACE,
-    KC.LEFT_SHIFT, KC.OPEN_BRACKET, KC.CLOSE_BRACKET, KC.D, KC.F, KC.G, KC.H, KC.J, KC.MINUS, KC.EQUAL,   KC.SLASH, 0,
-    0,              KC.Z, KC.X, KC.C, KC.V, KC.B, KC.N, KC.M, KC.COMMA, KC.INSERT,   KC.PAGEUP, KC.DELETE,
+    0, KC.OPEN_BRACKET, KC.CLOSE_BRACKET, KC.D, KC.F, KC.G, KC.H, KC.J, KC.MINUS, KC.EQUAL,   KC.SLASH, 0,
+    KC.LEFT_SHIFT,  KC.BACKSLASH, KC.SLASH, KC.C, KC.V, KC.B, KC.N, KC.M, KC.COMMA, KC.INSERT,   KC.PAGEUP, KC.DELETE,
     KC.LEFT_UI, KC.LEFT_CTRL, KC.LEFT_ALT, 0, 0, KC.PRINTSCREEN, 0, 0, 0,    KC.HOME, KC.PAGEDOWN, KC.END
 ]]
+
+# 0x1000 is the layer select key
+# It's the left-most 0 in the layers of our keymap
+# Or the key right below Escape
+LAYER_SELECT = 0x1000
 
 ROWS = [18, 19, 20, 21]
 COLS = [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
@@ -118,9 +125,7 @@ def main():
                     mask = 0b1 << n
 
                     # This is a very crude layer setup
-                    # 0x1000000 is the tab key
-                    # It's the left-most 0 in the layers of our keymap
-                    layer = 1 if matrix & 0x1000000 else 0
+                    layer = 1 if matrix & LAYER_SELECT else 0
 
                     code = keymap[layer][n]
 
