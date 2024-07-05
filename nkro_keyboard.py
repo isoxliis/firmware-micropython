@@ -1,7 +1,9 @@
+# ruff: noqa: E741
+# Based upon https://github.com/micropython/micropython-lib/blob/master/micropython/usb/usb-device-keyboard/usb/device/keyboard.py
 # MIT license; Copyright (c) 2023-2024 Angus Gratton
+#              Copyright (c)      2024 Phil Howard
+import micropython
 from micropython import const
-import time
-import usb.device
 from usb.device.hid import HIDInterface
 
 _INTERFACE_PROTOCOL_KEYBOARD = const(0x01)
@@ -24,6 +26,7 @@ class KeyboardInterface(HIDInterface):
             bytearray(_KEY_REPORT_LEN),
             bytearray(_KEY_REPORT_LEN),
         ]  # Ping/pong report buffers
+        self._empty_buffer = bytearray(_KEY_REPORT_LEN)
         self.numlock = False
 
     def on_set_report(self, report_data, _report_id, _report_type):
@@ -34,6 +37,7 @@ class KeyboardInterface(HIDInterface):
         # together values as defined in LEDCode.
         pass
 
+    @micropython.native
     def send_keys(self, down_keys, timeout_ms=100):
         # Update the state of the keyboard by sending a report with down_keys
         # set, where down_keys is an iterable (list or similar) of integer
@@ -43,12 +47,12 @@ class KeyboardInterface(HIDInterface):
         # pending to be sent to the host. Returns True on success.
 
         r, s = self._key_reports  # next report buffer to send, spare report buffer
-        r[0:_KEY_REPORT_LEN] = bytearray(_KEY_REPORT_LEN)
+        r[:] = self._empty_buffer  # empty the pending buffer
 
         for k in down_keys:
-            byte = k // 8
-            bit = k & 0b111;
-            r[byte] |= 0b1 << bit;
+            byte = k >> 3
+            bit = k & 0b111
+            r[byte] |= 0b1 << bit
 
         if self.send_report(r, timeout_ms):
             # Swap buffers if the previous one is newly queued to send, so
