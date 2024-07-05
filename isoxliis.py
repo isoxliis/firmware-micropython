@@ -3,8 +3,8 @@ import time
 from rp2 import PIO
 from machine import Pin, PWM
 import usb.device
-from usb.device.keyboard import KeyboardInterface, KeyCode as KC
-
+# from usb.device.keyboard import KeyboardInterface, KeyCode as KC
+from nkro_keyboard import KeyboardInterface, KeyCode as KC
 
 """
 ISOXLIIS Keyboard Firmware v0.0.2
@@ -17,6 +17,9 @@ At startup hold:
     - Q to disable USB output (for debugging)
 """
 
+# Bah! https://github.com/micropython/micropython-lib/commit/fbf7e120c6830d8d04097309e715bcab63dcca67
+KC_GRAVE = getattr(KC, "GRAVE", None) or getattr(KC, "TILDE")
+
 # Unpopulated keys and LAYER_SELECT should be set to 0
 # Default layer is always layer 0
 # Holding down the LAYER_SELECT key will access layer 1
@@ -26,7 +29,7 @@ keymap = [[
     KC.LEFT_SHIFT,  KC.Z, KC.X, KC.C, KC.V, KC.B, KC.N, KC.M, KC.COMMA, KC.DOT,   KC.UP, KC.HASH,
     KC.LEFT_UI, KC.LEFT_CTRL, KC.LEFT_ALT, 0, 0, KC.SPACE, 0, 0, 0,    KC.LEFT, KC.DOWN, KC.RIGHT
     ], [
-    KC.TILDE,     KC.N1, KC.N2, KC.N3, KC.N4, KC.N5, KC.N6, KC.N7, KC.N8, KC.N9, KC.N0, KC.BACKSPACE,
+    KC_GRAVE,     KC.N1, KC.N2, KC.N3, KC.N4, KC.N5, KC.N6, KC.N7, KC.N8, KC.N9, KC.N0, KC.BACKSPACE,
     0, KC.OPEN_BRACKET, KC.CLOSE_BRACKET, KC.D, KC.F, KC.G, KC.H, KC.J, KC.MINUS, KC.EQUAL,   KC.SLASH, 0,
     KC.LEFT_SHIFT,  KC.BACKSLASH, KC.SLASH, KC.C, KC.V, KC.B, KC.N, KC.M, KC.COMMA, KC.INSERT,   KC.PAGEUP, KC.DELETE,
     KC.LEFT_UI, KC.LEFT_CTRL, KC.LEFT_ALT, 0, 0, KC.PRINTSCREEN, 0, 0, 0,    KC.HOME, KC.PAGEDOWN, KC.END
