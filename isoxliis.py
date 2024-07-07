@@ -1,11 +1,11 @@
 import rp2
-import time
 from rp2 import PIO
 from machine import Pin, PWM
 import usb.device
 # from usb.device.keyboard import KeyboardInterface, KeyCode as KC
 from nkro_keyboard import KeyboardInterface, KeyCode as KC
 
+from isoxliis_macro import macos_ss_window
 """
 ISOXLIIS Keyboard Firmware v0.0.2
 
@@ -16,6 +16,7 @@ At startup hold:
     - ESC to exit this program
     - Q to disable USB output (for debugging)
 """
+
 
 # Bah! https://github.com/micropython/micropython-lib/commit/fbf7e120c6830d8d04097309e715bcab63dcca67
 KC_GRAVE = getattr(KC, "GRAVE", None) or getattr(KC, "TILDE")
@@ -32,7 +33,7 @@ keymap = [[
     KC_GRAVE,     KC.N1, KC.N2, KC.N3, KC.N4, KC.N5, KC.N6, KC.N7, KC.N8, KC.N9, KC.N0, KC.BACKSPACE,
     0, KC.OPEN_BRACKET, KC.CLOSE_BRACKET, KC.D, KC.F, KC.G, KC.H, KC.J, KC.MINUS, KC.EQUAL,   KC.SLASH, 0,
     KC.LEFT_SHIFT,  KC.BACKSLASH, KC.SLASH, KC.C, KC.V, KC.B, KC.N, KC.M, KC.COMMA, KC.INSERT,   KC.PAGEUP, KC.DELETE,
-    KC.LEFT_UI, KC.LEFT_CTRL, KC.LEFT_ALT, 0, 0, KC.PRINTSCREEN, 0, 0, 0,    KC.HOME, KC.PAGEDOWN, KC.END
+    KC.LEFT_UI, KC.LEFT_CTRL, KC.LEFT_ALT, 0, 0, macos_ss_window, 0, 0, 0,    KC.HOME, KC.PAGEDOWN, KC.END
 ]]
 
 # 0x1000 is the layer select key
@@ -98,6 +99,7 @@ def scan_keys():
 
 
 def main():
+    active_macros = []
     last_matrix = 0
     led_duty = 0
 
@@ -118,11 +120,12 @@ def main():
             led_duty = min(512, max(0, led_duty))
             LED_PWM.duty_u16(1000 + led_duty * 100)
 
-            if matrix != last_matrix:
-                matrix_changed = matrix ^ last_matrix
-                last_matrix = matrix
+            keys = []
+            matrix_changed = matrix ^ last_matrix
 
-                keys = []
+            if matrix_changed:
+                last_matrix = matrix
+                print(f"{matrix:048b}")
 
                 for n in range(48):
                     mask = 0b1 << n
@@ -136,21 +139,61 @@ def main():
                     key_pressed = matrix & mask
 
                     if key_pressed:
-                        keys.append(code)
+                        if callable(code):
+                            active_macros.append(code())
+                        else:
+                            keys.append(code)
 
                     # Handy debug stuff, hold Q on startup to disable USB
                     # and see this in Thonny!
                     if not usb_enabled and key_changed:
                         col = n % 12
                         row = n // 12
-                        key = CODE_TO_KEY.get(code, "N/A")
+                        if callable(code):
+                            key = f"macro: {code}"
+                        else:
+                            key = CODE_TO_KEY.get(code, "N/A")
                         state = "pressed" if key_pressed else "released"
                         print(f"{key} {col, row} {state}!")
 
+            if active_macros:
+                macro = active_macros[0]
+
+                try:
+                    n = next(macro)
+                except StopIteration:
+                    active_macros.pop(0)
+                    keys.append(0)
+                    n = None
+
+                if n is not None:
+                    # So long as we keep getting generators, insert them into our macro stack
+                    while True:
+                        try:
+                            # If the macro uses "yield wait()" instead of "yield from wait()"
+                            # then insert the new generator onto the top of the queue
+                            # so it Just Works.
+                            _n = next(n)
+                            active_macros.insert(0, n)
+                            n = _n
+                        except TypeError:
+                            break
+                        except StopIteration:
+                            n = -1
+                            break
+
+                    if isinstance(n, (list, tuple)):
+                        keys.extend(n)
+                    elif callable(n):
+                        active_macros.insert(0, n())
+                    elif n > -1:
+                        keys.append(n)
+
+            if keys or matrix_changed:
                 if usb_enabled:
                     k.send_keys(keys)
-
-                time.sleep_ms(1)
+                else:
+                    print(keys)
 
     except KeyboardInterrupt:
         pass
